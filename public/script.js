@@ -78,6 +78,12 @@ const confirmLogoutYesButton = document.getElementById("confirmLogoutYes");
 const confirmLogoutNoButton = document.getElementById("confirmLogoutNo");
 // --- Akhir Tambahan Modal Konfirmasi Logout ---
 
+// --- Elemen untuk Kontrol Responsif ---
+const contactListContainer = document.getElementById("contactListContainer");
+const chatPanelContainer = document.getElementById("chatPanelContainer");
+const backToContactsButton = document.getElementById("backToContactsButton");
+// --- Akhir Elemen Kontrol Responsif ---
+
 // --- Fungsi Utilitas ---
 
 // Menampilkan pesan di kotak pesan kustom
@@ -129,6 +135,20 @@ function showMainApp() {
   hideModal(authModal);
   hideModal(logoutConfirmModal); // Pastikan modal konfirmasi juga tersembunyi
   appContainer.classList.remove("hidden");
+
+  // Perbaikan: Atur visibilitas panel berdasarkan ukuran layar
+  if (window.innerWidth < 768) {
+    // Ukuran md: breakpoint Tailwind CSS
+    contactListContainer.classList.remove("hidden");
+    contactListContainer.classList.add("flex");
+    chatPanelContainer.classList.remove("flex");
+    chatPanelContainer.classList.add("hidden");
+  } else {
+    contactListContainer.classList.remove("hidden");
+    contactListContainer.classList.add("flex");
+    chatPanelContainer.classList.remove("hidden");
+    chatPanelContainer.classList.add("flex");
+  }
 }
 
 showRegisterLink.addEventListener("click", (e) => {
@@ -248,6 +268,45 @@ confirmLogoutNoButton.addEventListener("click", () => {
 });
 // --- Akhir Perubahan Konfirmasi Logout ---
 
+// --- Logika Kontrol Responsif ---
+backToContactsButton.addEventListener("click", () => {
+  contactListContainer.classList.remove("hidden");
+  contactListContainer.classList.add("flex");
+  chatPanelContainer.classList.remove("flex");
+  chatPanelContainer.classList.add("hidden");
+});
+
+// Listener untuk perubahan ukuran layar (opsional, untuk penyesuaian dinamis)
+window.addEventListener("resize", () => {
+  if (loggedInUser) {
+    // Hanya sesuaikan jika sudah login
+    if (window.innerWidth >= 768) {
+      // Desktop view
+      contactListContainer.classList.remove("hidden");
+      contactListContainer.classList.add("flex");
+      chatPanelContainer.classList.remove("hidden");
+      chatPanelContainer.classList.add("flex");
+    } else {
+      // Mobile view
+      // Jika chat panel sedang terbuka, biarkan terbuka. Jika tidak, tampilkan daftar kontak.
+      if (currentChatPartner) {
+        // Jika ada chat aktif, tetap di chat panel
+        contactListContainer.classList.remove("flex");
+        contactListContainer.classList.add("hidden");
+        chatPanelContainer.classList.remove("hidden");
+        chatPanelContainer.classList.add("flex");
+      } else {
+        // Jika tidak ada chat aktif, kembali ke daftar kontak
+        contactListContainer.classList.remove("hidden");
+        contactListContainer.classList.add("flex");
+        chatPanelContainer.classList.remove("flex");
+        chatPanelContainer.classList.add("hidden");
+      }
+    }
+  }
+});
+// --- Akhir Logika Kontrol Responsif ---
+
 // --- Inisialisasi Aplikasi Chat ---
 
 async function initChatApp() {
@@ -316,6 +375,15 @@ async function selectChatPartner(partner) {
   noChatSelectedMessage.classList.add("hidden");
   chatMessagesContainer.innerHTML = ""; // Clear previous messages
 
+  // Perbaikan: Kontrol visibilitas panel untuk responsif
+  if (window.innerWidth < 768) {
+    // Jika di layar kecil (mobile)
+    contactListContainer.classList.remove("flex");
+    contactListContainer.classList.add("hidden");
+    chatPanelContainer.classList.remove("hidden");
+    chatPanelContainer.classList.add("flex");
+  }
+
   await fetchMessages(partner.id);
   subscribeToChatChannel(loggedInUser.userId, partner.id);
   // Perbaikan: Gulir ke bawah setelah memilih kontak dan memuat pesan
@@ -340,6 +408,7 @@ async function fetchMessages(receiverId, limit = 20, offset = 0) {
       messages.forEach((msg) => appendMessageToChat(msg)); // Tambahkan pesan satu per satu (akan appendChild)
       // Gulir ke bawah setelah semua pesan historis ditambahkan dan dirender
       setTimeout(() => {
+        // Use setTimeout to ensure DOM is updated before scrolling
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
       }, 50); // Delay 50ms
     } else {

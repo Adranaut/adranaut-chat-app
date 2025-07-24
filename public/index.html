@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Adranaut Chat App</title>
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,13 +24,16 @@
     class="font-sans antialiased bg-gray-100 h-screen flex items-center justify-center"
   >
     <!-- Main Chat Application Container -->
+    <!-- Perbaikan: flex-col untuk mobile, md:flex-row untuk desktop -->
     <div
       id="app-container"
-      class="hidden flex h-[95vh] w-[95vw] bg-white rounded-lg shadow-xl overflow-hidden md:flex"
+      class="flex h-[95vh] w-[95vw] bg-white rounded-lg shadow-xl overflow-hidden flex-col md:flex-row"
     >
-      <!-- Left Panel: Contact List/Chat History -->
+      <!-- Panel Kiri: Daftar Kontak/Riwayat Chat -->
+      <!-- Perbaikan: Tambah ID untuk kontrol JS, sesuaikan visibilitas awal. Default visible, hidden by JS on mobile when chat is open. -->
       <div
-        class="w-full md:w-1/3 lg:w-1/4 bg-gray-50 border-r border-gray-200 flex flex-col"
+        id="contactListContainer"
+        class="w-full h-full md:w-1/3 lg:w-1/4 bg-gray-50 border-r border-gray-200 flex flex-col"
       >
         <div
           class="p-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-md rounded-tl-lg flex items-center justify-between"
@@ -71,18 +75,29 @@
         </div>
       </div>
 
-      <!-- Right Panel: Tampilan Chat -->
-      <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col bg-white">
+      <!-- Panel Kanan: Tampilan Chat -->
+      <!-- Perbaikan: Tambah ID untuk kontrol JS, sesuaikan visibilitas awal. Hidden by default on mobile, flex on md+. -->
+      <div
+        id="chatPanelContainer"
+        class="w-full h-full flex-col bg-white hidden md:flex"
+      >
         <div
           id="chatHeader"
           class="p-4 bg-gray-100 border-b border-gray-200 shadow-sm flex items-center rounded-tr-lg"
         >
+          <!-- Perbaikan: Tombol kembali untuk mobile -->
+          <button
+            id="backToContactsButton"
+            class="md:hidden text-gray-600 hover:text-gray-800 mr-3 focus:outline-none transition duration-200 ease-in-out transform hover:scale-110"
+            title="Kembali ke Kontak"
+          >
+            <i class="fas fa-arrow-left text-2xl"></i>
+          </button>
           <i class="fas fa-user-circle text-3xl text-gray-400 mr-3"></i>
           <h2 id="chatPartnerName" class="text-xl font-semibold text-gray-800">
             Pilih kontak untuk memulai chat
           </h2>
         </div>
-        <!-- Perbaikan: Hapus flex-col-reverse agar pesan terbaru di bawah -->
         <div
           id="chatMessages"
           class="flex-1 p-6 overflow-y-auto chat-messages flex flex-col"
