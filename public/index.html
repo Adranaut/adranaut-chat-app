@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adranaut Chat App</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- Pusher CDN -->
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body
+    class="font-sans antialiased bg-gray-100 h-screen flex items-center justify-center"
+  >
+    <!-- Main Chat Application Container -->
+    <div
+      id="app-container"
+      class="hidden flex h-[95vh] w-[95vw] bg-white rounded-lg shadow-xl overflow-hidden md:flex"
+    >
+      <!-- Left Panel: Contact List/Chat History -->
+      <div
+        class="w-full md:w-1/3 lg:w-1/4 bg-gray-50 border-r border-gray-200 flex flex-col"
+      >
+        <div
+          class="p-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-md rounded-tl-lg flex items-center justify-between"
+        >
+          <h1 class="text-2xl font-bold">Adranaut Chat</h1>
+          <div class="flex items-center space-x-3">
+            <button
+              id="newChatButton"
+              class="text-white hover:text-gray-200 focus:outline-none transition duration-200 ease-in-out transform hover:scale-110"
+              title="Mulai Obrolan Baru"
+            >
+              <i class="fas fa-plus-circle text-2xl"></i>
+            </button>
+            <button
+              id="profileButton"
+              class="text-white hover:text-gray-200 focus:outline-none transition duration-200 ease-in-out transform hover:scale-110"
+              title="Profil Pengguna"
+            >
+              <i class="fas fa-user-circle text-2xl"></i>
+            </button>
+            <button
+              id="logoutButton"
+              class="text-white hover:text-gray-200 focus:outline-none transition duration-200 ease-in-out transform hover:scale-110"
+              title="Keluar"
+            >
+              <i class="fas fa-sign-out-alt text-2xl"></i>
+            </button>
+          </div>
+        </div>
+        <div class="p-4 border-b border-gray-200">
+          <p class="text-gray-700 text-lg font-semibold">
+            Selamat Datang,
+            <span id="loggedInUserName" class="text-teal-700"></span>!
+          </p>
+        </div>
+        <div id="contactList" class="flex-1 overflow-y-auto contact-list">
+          <!-- Daftar kontak akan dimuat di sini -->
+          <div class="p-4 text-gray-500 text-center">Memuat kontak...</div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Tampilan Chat -->
+      <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col bg-white">
+        <div
+          id="chatHeader"
+          class="p-4 bg-gray-100 border-b border-gray-200 shadow-sm flex items-center rounded-tr-lg"
+        >
+          <i class="fas fa-user-circle text-3xl text-gray-400 mr-3"></i>
+          <h2 id="chatPartnerName" class="text-xl font-semibold text-gray-800">
+            Pilih kontak untuk memulai chat
+          </h2>
+        </div>
+        <!-- Perbaikan: Hapus flex-col-reverse agar pesan terbaru di bawah -->
+        <div
+          id="chatMessages"
+          class="flex-1 p-6 overflow-y-auto chat-messages flex flex-col"
+        >
+          <!-- Pesan chat akan dimuat di sini -->
+          <div
+            class="text-center text-gray-500 mt-4"
+            id="noChatSelectedMessage"
+          >
+            <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+            <p class="text-lg">
+              Mulai percakapan dengan memilih kontak atau membuat chat baru.
+            </p>
+          </div>
+        </div>
+        <div
+          id="messageInputArea"
+          class="p-4 bg-gray-100 border-t border-gray-200 flex items-center hidden"
+        >
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Ketik pesan Anda..."
+            class="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-200 ease-in-out text-gray-700"
+          />
+          <button
+            id="sendMessageButton"
+            class="ml-3 px-5 py-3 bg-teal-500 text-white rounded-full hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
+          >
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Modal Login/Register -->
+    <div id="authModal" class="modal flex">
+      <div class="modal-content text-center">
+        <h2 class="text-3xl font-bold text-teal-600 mb-6">Adranaut Chat App</h2>
+        <div id="loginForm" class="space-y-4">
+          <h3 class="text-2xl font-semibold text-gray-800 mb-4">Login</h3>
+          <input
+            type="email"
+            id="loginEmail"
+            placeholder="Email"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <button
+            id="loginSubmit"
+            class="w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
+          >
+            Login
+          </button>
+          <p class="text-gray-600 mt-4">
+            Belum punya akun?
+            <a
+              href="#"
+              id="showRegisterLink"
+              class="text-teal-600 hover:underline"
+              >Daftar di sini</a
+            >
+          </p>
+        </div>
+        <div id="registerForm" class="space-y-4 hidden">
+          <h3 class="text-2xl font-semibold text-gray-800 mb-4">Register</h3>
+          <input
+            type="text"
+            id="registerName"
+            placeholder="Nama Lengkap"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <input
+            type="text"
+            id="registerPhoneNumber"
+            placeholder="Nomor Telepon (contoh: +62812...)"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <input
+            type="email"
+            id="registerEmail"
+            placeholder="Email"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <input
+            type="password"
+            id="registerPassword"
+            placeholder="Password"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <button
+            id="registerSubmit"
+            class="w-full p-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
+          >
+            Register
+          </button>
+          <p class="text-gray-600 mt-4">
+            Sudah punya akun?
+            <a
+              href="#"
+              id="showLoginLink"
+              class="text-emerald-600 hover:underline"
+              >Login di sini</a
+            >
+          </p>
+        </div>
+        <div id="authMessage" class="mt-4 text-sm font-medium"></div>
+      </div>
+    </div>
+
+    <!-- Modal Profil -->
+    <div id="profileModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeProfileModal()">&times;</span>
+        <h2 class="text-2xl font-bold text-teal-600 mb-4">Profil Pengguna</h2>
+        <div class="space-y-4">
+          <p class="text-lg text-gray-700">
+            Nama: <span id="displayUserName" class="font-semibold"></span>
+          </p>
+          <p class="text-lg text-gray-700">
+            Email: <span id="displayUserEmail" class="font-semibold"></span>
+          </p>
+          <p class="text-lg text-gray-700">
+            Nomor Telepon:
+            <span id="displayUserPhone" class="font-semibold"></span>
+          </p>
+
+          <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">
+            Ubah Nama
+          </h3>
+          <input
+            type="text"
+            id="editUserNameInput"
+            placeholder="Nama Baru"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <button
+            id="updateNameButton"
+            class="w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
+          >
+            Perbarui Nama
+          </button>
+          <div id="profileMessage" class="mt-4 text-sm font-medium"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Obrolan Baru -->
+    <div id="newChatModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeNewChatModal()">&times;</span>
+        <h2 class="text-2xl font-bold text-teal-600 mb-4">
+          Mulai Obrolan Baru
+        </h2>
+        <div class="space-y-4">
+          <input
+            type="text"
+            id="newChatPhoneNumber"
+            placeholder="Masukkan Nomor Telepon (contoh: +62812...)"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <button
+            id="findUserButton"
+            class="w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
+          >
+            Cari Pengguna
+          </button>
+          <div
+            id="foundUserDisplay"
+            class="mt-4 p-3 border border-gray-200 rounded-lg bg-gray-50 hidden"
+          >
+            <p class="text-gray-700">
+              Nama: <span id="foundUserName" class="font-semibold"></span>
+            </p>
+            <p class="text-gray-700">
+              Email: <span id="foundUserEmail" class="font-semibold"></span>
+            </p>
+            <button
+              id="startChatWithFoundUserButton"
+              class="mt-3 w-full p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm"
+            >
+              Mulai Chat
+            </button>
+          </div>
+          <div id="newChatMessage" class="mt-4 text-sm font-medium"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Box for general alerts -->
+    <div
+      id="messageBox"
+      class="fixed bottom-5 right-5 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50"
+    >
+      <p id="messageBoxContent"></p>
+    </div>
+
+    <!-- Configuration file for API URL and Pusher keys -->
+    <!-- config.js akan dibuat dinamis oleh server Node.js -->
+    <script src="/config.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+  </body>
+</html>
